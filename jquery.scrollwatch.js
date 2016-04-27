@@ -82,7 +82,9 @@
     // when the visibility is the same
     handleScroll: function(force) {
       var lastVisibility = this.visibility;
-      var visibility = this.isInViewport();
+      var lastSurroundVisiblity = this.surroundVisibility;
+      var visibility = this.isInViewport(false);
+      var surroundVisibility = this.isInViewport(true);
       var currentOffset = this.$watchOn.scrollTop();
 
       if (this.lastOffset === false) {
@@ -93,6 +95,7 @@
 
       this.lastOffset = currentOffset;
       this.visibility = visibility;
+      this.surroundVisibility = surroundVisibility;
 
       if (!this.inViewport && visibility === 1) {
         this.inViewport = true;
@@ -108,7 +111,7 @@
       }
 
       // prevent firing multiple `scroll` events when the visibility is the same
-      if (visibility !== lastVisibility || force) {
+      if (visibility !== lastVisibility || surroundVisibility !== lastSurroundVisiblity || force) {
         this.trigger('scroll');
       }
 
@@ -132,7 +135,7 @@
       }
 
       this.lastTriggered = event;
-      this.callbacks[event].fire({ direction: this.direction, visibility: this.visibility, originalEvent: this.originalEvent });
+      this.callbacks[event].fire({ direction: this.direction, visibility: this.visibility, surroundVisibility: this.surroundVisibility, originalEvent: this.originalEvent });
     },
 
     _getOffsetTop: function() {
@@ -151,7 +154,7 @@
       return offset;
     },
 
-    isInViewport: function() {
+    isInViewport: function(surround) {
       var scrollTop = this.$watchOn.scrollTop();
       var containerHeight = this.$watchOn.height();
       var scrollBottom = scrollTop + containerHeight;
@@ -159,6 +162,11 @@
       var elTop = this._getOffsetTop();
       var elHeight = this.el.offsetHeight;
       var elBottom = elTop + elHeight;
+
+      if (surround) {
+        scrollTop = scrollTop - containerHeight;
+        scrollBottom = scrollBottom + containerHeight;
+      }
 
       var elementIsBiggerThanContainer = elHeight >= containerHeight;
 
